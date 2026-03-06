@@ -1,0 +1,9 @@
+Adding the Bug Report template to the project:
+
+1. Create a .github folder in the root of the Repository
+2. Create a folder called ISSUE_TEMPLATE inside the .github folder
+3. Paste the bug_report.md and the config.yml file inside the ISSUE_TEMPLATE folder
+
+To test this is necessary to push the changes to github
+
+Now when trying to create a new Issue, the option to use the template will appear in the window
