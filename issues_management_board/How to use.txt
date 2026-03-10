@@ -1,0 +1,7 @@
+
+
+This action adds an Issue directly to the Global Testing and QA Board
+
+When creating an Issue it has to be labeled as 'qa' and it will be moved automatically over there
+
+If the label 'qa' is not available please create it but the name should be 'qa' on LOWERCASE and WITHOUT the single quotes

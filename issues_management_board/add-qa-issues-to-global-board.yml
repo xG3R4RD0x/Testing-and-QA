@@ -1,0 +1,20 @@
+on:
+  issues:
+    types: [opened, labeled, reopened]
+
+permissions:
+  issues: read
+  repository-projects: write
+
+jobs:
+  add_to_project:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add issue to Org QA board when labeled qa
+        if: contains(github.event.issue.labels.*.name, 'qa')
+        uses: actions/add-to-project@main
+        with:
+          #in project-url has to go the url of the global board
+
+          project-url: https://github.com/orgs/<ORG>/projects/<N>
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}

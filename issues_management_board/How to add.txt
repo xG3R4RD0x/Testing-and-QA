@@ -1,0 +1,36 @@
+
+1.)
+Personal Access Token Setup: 
+
+#### It can only be done by someone with admin rights in the Organization ####
+
+A Classic Private Access Token(PAT) hats to be generated for the Organization
+
+In the PAT Settings site, the selected Repositories for the key have to be defined
+(this can be changed later if a new Repository is created or removed)
+
+*This key has to be saved in safe place*
+
+2.)
+Repository Secret:
+
+#### It can only be done by someone with admin right in the Repository ####
+
+In Repository settings
+Settings → Secrets and variables → Actions → New organization secret
+
+Create a new secret with the name 'ADD_TO_PROJECT_PAT' or similar according to the github action file
+
+
+3.)
+Add Action to main in Repository
+
+In the main branch of the repository
+
+add the action add-qa-issues-to-global-board.yml file 
+
+it has to be put under .github > workflows in the root of the Repository.
+
+
+
+
