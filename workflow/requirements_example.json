@@ -1,0 +1,318 @@
+{
+  "proposal": {
+    "reference": "EST-001301",
+    "title": "FMS bearbeitbare Formulare (interaktiv)",
+    "client": "Götz-Management-Holding AG",
+    "vendor": "Number42 GmbH",
+    "created": "2025-04-03",
+    "expires": "2025-04-17",
+    "total_net_eur": 14000.00,
+    "total_gross_eur": 16660.00
+  },
+  "features": [
+    {
+      "id": "FEAT-001",
+      "title": "Formulare von Konfiguration in DB verlagern",
+      "effort_pt": 1.0,
+      "price_eur": 1120.00,
+      "priority": "high",
+      "type": "backend",
+      "requirements": [
+        {
+          "id": "REQ-001-01",
+          "description": "Crear una estructura de datos adecuada en la base de datos para almacenar formularios",
+          "type": "functional",
+          "acceptance_criteria": "La estructura de datos existe en la DB y puede almacenar todos los atributos de un formulario"
+        },
+        {
+          "id": "REQ-001-02",
+          "description": "Seeding de los formularios existentes hacia la nueva estructura en DB",
+          "type": "functional",
+          "acceptance_criteria": "Todos los formularios actuales migrados a la DB sin pérdida de datos"
+        },
+        {
+          "id": "REQ-001-03",
+          "description": "FormularID debe ser UUID — tabla sin contenido como referencia para formularios",
+          "type": "functional",
+          "acceptance_criteria": "Cada formulario tiene un UUID único como identificador primario"
+        },
+        {
+          "id": "REQ-001-04",
+          "description": "Los LaTeX Render Templates existentes deben ser seleccionables por formulario",
+          "type": "functional",
+          "acceptance_criteria": "Al configurar un formulario se puede asignar un template LaTeX existente"
+        },
+        {
+          "id": "REQ-001-05",
+          "description": "Interfaz de administración de formularios (CRUD, excluyendo editor de campos)",
+          "type": "functional",
+          "acceptance_criteria": "Existen pantallas para crear, listar, editar y eliminar formularios sin editor visual"
+        },
+        {
+          "id": "REQ-001-06",
+          "description": "La interfaz de administración solo debe ser accesible por usuarios con rol Admin",
+          "type": "security",
+          "acceptance_criteria": "Usuarios sin rol Admin reciben error 403 al intentar acceder a la administración de formularios"
+        }
+      ]
+    },
+    {
+      "id": "FEAT-002",
+      "title": "Versionierung von Formularen (Versionado de Formularios)",
+      "effort_pt": 0.5,
+      "price_eur": 560.00,
+      "priority": "high",
+      "type": "backend",
+      "requirements": [
+        {
+          "id": "REQ-002-01",
+          "description": "FormularVersionID debe ser UUID + número entero de versión, análogo a los formularios existentes",
+          "type": "functional",
+          "acceptance_criteria": "Cada versión tiene un UUID único y un número de versión entero incremental"
+        },
+        {
+          "id": "REQ-002-02",
+          "description": "Version NULL equivale a estado Draft (borrador)",
+          "type": "functional",
+          "acceptance_criteria": "Un formulario con versión NULL es tratado como borrador en toda la aplicación"
+        },
+        {
+          "id": "REQ-002-03",
+          "description": "Los formularios existentes (legacy) reciben la versión 1 al migrar",
+          "type": "migration",
+          "acceptance_criteria": "Todos los formularios pre-existentes tienen version = 1 tras la migración"
+        },
+        {
+          "id": "REQ-002-04",
+          "description": "Los formularios antiguos ya enviados desde las apps deben seguir siendo aceptados",
+          "type": "backward_compatibility",
+          "acceptance_criteria": "El sistema acepta y procesa correctamente formularios enviados con versiones antiguas"
+        },
+        {
+          "id": "REQ-002-05",
+          "description": "Extender la interfaz/API (Schnittstelle) para soportar versionado",
+          "type": "functional",
+          "acceptance_criteria": "La API expone endpoints o campos para gestionar y consultar versiones de formularios"
+        }
+      ]
+    },
+    {
+      "id": "FEAT-003",
+      "title": "CheckIn / CheckOut von Formularen",
+      "effort_pt": 1.0,
+      "price_eur": 1120.00,
+      "priority": "medium",
+      "type": "backend",
+      "optional": true,
+      "requirements": [
+        {
+          "id": "REQ-003-01",
+          "description": "Si no existe un Draft, se puede crear uno nuevo basado en la versión publicada más reciente",
+          "type": "functional",
+          "acceptance_criteria": "Al hacer checkout con versión publicada existente, se genera un draft copiando esa versión"
+        },
+        {
+          "id": "REQ-003-02",
+          "description": "Si no existe ninguna versión, el nuevo formulario se crea desde una plantilla estándar con todos los campos",
+          "type": "functional",
+          "acceptance_criteria": "Al hacer checkout sin versión previa, se genera un draft con todos los campos del template estándar"
+        },
+        {
+          "id": "REQ-003-03",
+          "description": "El Draft debe tener asignado el UserID del editor que lo creó",
+          "type": "functional",
+          "acceptance_criteria": "El campo editor_user_id del Draft está poblado con el ID del usuario que hizo checkout"
+        },
+        {
+          "id": "REQ-003-04",
+          "description": "No se puede crear un nuevo Draft mientras exista uno abierto de otro editor",
+          "type": "functional",
+          "acceptance_criteria": "El sistema retorna error al intentar hacer checkout cuando ya hay un draft activo de otro usuario"
+        },
+        {
+          "id": "REQ-003-05",
+          "description": "El editor puede eliminar su propio Draft",
+          "type": "functional",
+          "acceptance_criteria": "El editor asignado puede eliminar el draft; otros usuarios no pueden eliminarlo"
+        },
+        {
+          "id": "REQ-003-06",
+          "description": "El editor puede publicar su Draft, convirtiéndolo en una nueva versión",
+          "type": "functional",
+          "acceptance_criteria": "Al publicar, el Draft recibe un número de versión y deja de ser Draft (version != NULL)"
+        },
+        {
+          "id": "REQ-003-07",
+          "description": "El editor actual debe ser visible para todos los demás usuarios",
+          "type": "functional",
+          "acceptance_criteria": "La UI muestra el nombre/ID del editor activo a cualquier usuario que consulte el formulario"
+        },
+        {
+          "id": "REQ-003-08",
+          "description": "El forzado de remoción del editor actual está sin definir — requiere clarificación",
+          "type": "open_question",
+          "acceptance_criteria": "PENDIENTE: Definir comportamiento cuando un Admin necesita forzar la liberación de un checkout"
+        }
+      ]
+    },
+    {
+      "id": "FEAT-004",
+      "title": "App-Integration (Mobile App Anpassungen)",
+      "effort_pt": 2.0,
+      "price_eur": 2240.00,
+      "priority": "high",
+      "type": "mobile",
+      "requirements": [
+        {
+          "id": "REQ-004-01",
+          "description": "Usar FieldID en lugar del título del campo — motivado por el testrun en Stage",
+          "type": "functional",
+          "acceptance_criteria": "La app referencia campos por FieldID y no por string de título en todos los formularios"
+        },
+        {
+          "id": "REQ-004-02",
+          "description": "El FormularID cambia con cada nueva versión publicada",
+          "type": "functional",
+          "acceptance_criteria": "La app maneja correctamente que el FormularID es distinto entre versiones del mismo formulario"
+        },
+        {
+          "id": "REQ-004-03",
+          "description": "Extender el cliente GRPC para soportar los cambios de versionado y FieldID",
+          "type": "functional",
+          "acceptance_criteria": "El cliente GRPC envía y recibe FieldIDs y FormularIDs versionados correctamente"
+        },
+        {
+          "id": "REQ-004-04",
+          "description": "Probar el nuevo release de la app en entorno de staging",
+          "type": "testing",
+          "acceptance_criteria": "El nuevo release pasa todos los test cases en staging sin regresiones"
+        },
+        {
+          "id": "REQ-004-05",
+          "description": "Publicar el nuevo release de la app en producción",
+          "type": "deployment",
+          "acceptance_criteria": "El nuevo release está disponible en las tiendas de apps (App Store / Google Play)"
+        }
+      ]
+    },
+    {
+      "id": "FEAT-005",
+      "title": "Formular-Editor — Variante 2 (Editor Visual de Formularios)",
+      "effort_pt": 7.0,
+      "price_eur": 7840.00,
+      "priority": "high",
+      "type": "frontend",
+      "note": "Requiere FEAT-001 como prerequisito (Variante 1)",
+      "requirements": [
+        {
+          "id": "REQ-005-01",
+          "description": "El formulario debe tener un editor visual UI integrado",
+          "type": "functional",
+          "acceptance_criteria": "Existe una pantalla de edición visual accesible desde la administración de formularios"
+        },
+        {
+          "id": "REQ-005-02",
+          "description": "Vista previa no funcional del formulario, editable directamente en pantalla",
+          "type": "functional",
+          "acceptance_criteria": "El editor muestra una preview del formulario que puede manipularse directamente"
+        },
+        {
+          "id": "REQ-005-03",
+          "description": "Insertar nuevos campos de todos los tipos disponibles",
+          "type": "functional",
+          "acceptance_criteria": "Se pueden agregar campos de cada uno de los tipos listados al formulario"
+        },
+        {
+          "id": "REQ-005-04",
+          "description": "Ordenar (reordenar) campos dentro del formulario",
+          "type": "functional",
+          "acceptance_criteria": "El usuario puede cambiar el orden de los campos mediante la UI y el orden persiste"
+        },
+        {
+          "id": "REQ-005-05",
+          "description": "Eliminar campos del formulario",
+          "type": "functional",
+          "acceptance_criteria": "El usuario puede eliminar cualquier campo y este desaparece del formulario y de la DB"
+        },
+        {
+          "id": "REQ-005-06",
+          "description": "Gestión de grupos de campos: crear, editar y eliminar (un nivel de profundidad)",
+          "type": "functional",
+          "acceptance_criteria": "Se pueden crear grupos, asignarles campos, renombrarlos y eliminarlos. No se permiten grupos anidados."
+        },
+        {
+          "id": "REQ-005-07",
+          "description": "Soporte completo de tipos de campo",
+          "type": "functional",
+          "field_types": [
+            "Inputgruppen (grupos de inputs)",
+            "Label",
+            "Text-Eingabe einzeilig (texto una línea)",
+            "Text-Eingabe mehrzeilig (texto multilinea)",
+            "Integer-Eingabe (número entero)",
+            "Float-Eingabe (número decimal)",
+            "Auswahlliste mit Checkboxen — con o sin selección múltiple (lista con checkboxes)",
+            "Schaltfläche 'Alles abhacken' — mostrar u ocultar (botón 'marcar todo')",
+            "Einzelne Checkbox (checkbox individual)",
+            "Zeitraumauswahl — Start y Ende (selector de rango de tiempo)",
+            "Uhrzeitauswahl (selector de hora)",
+            "Datumseingabe (selector de fecha)",
+            "Unterschrift (campo de firma)",
+            "Raumauswahl (selector de espacio/sala)"
+          ],
+          "acceptance_criteria": "Todos los tipos de campo listados pueden ser creados, configurados y visualizados en el editor"
+        },
+        {
+          "id": "REQ-005-08",
+          "description": "Inputs, grupos y templates tienen título y subtítulo localizados como pares clave-valor (idioma + traducción)",
+          "type": "i18n",
+          "acceptance_criteria": "Cada campo, grupo y template puede tener título y subtítulo en múltiples idiomas mediante key-value pairs. La UI permite gestionar estas traducciones."
+        }
+      ]
+    },
+    {
+      "id": "FEAT-006",
+      "title": "Projektmanagement",
+      "effort_pt": 1.0,
+      "price_eur": 1120.00,
+      "priority": "low",
+      "type": "management",
+      "requirements": [
+        {
+          "id": "REQ-006-01",
+          "description": "Coordinación y sesiones de feedback durante el desarrollo",
+          "type": "non_functional",
+          "acceptance_criteria": "Se realizan sesiones de alineación periódicas entre Number42 y Götz-Management-Holding AG"
+        }
+      ]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "OQ-001",
+      "feature": "FEAT-003",
+      "requirement": "REQ-003-08",
+      "description": "Forzar la remoción del editor activo en CheckIn/CheckOut — comportamiento no definido",
+      "owner": "Götz-Management-Holding AG",
+      "status": "pending_definition"
+    }
+  ],
+  "summary": {
+    "total_features": 6,
+    "total_requirements": 27,
+    "total_effort_pt": 12.5,
+    "optional_features": ["FEAT-003"],
+    "dependencies": [
+      {
+        "feature": "FEAT-005",
+        "depends_on": "FEAT-001",
+        "note": "El editor visual (Variante 2) requiere que la migración a DB (Variante 1) esté completada"
+      },
+      {
+        "feature": "FEAT-004",
+        "depends_on": "FEAT-002",
+        "note": "La app debe adaptarse tras implementar el versionado"
+      }
+    ]
+  }
+}

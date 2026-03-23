@@ -1,0 +1,14 @@
+#!/bin/bash
+# Wrapper script para ejecutar map-tasks-to-issues skill
+
+SKILL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT="${SKILL_DIR}/map_tasks_to_issues.py"
+
+# Validar que el script existe
+if [ ! -f "$SCRIPT" ]; then
+    echo "❌ Error: Script no encontrado en $SCRIPT"
+    exit 1
+fi
+
+# Pasar todos los argumentos al script Python
+python3 "$SCRIPT" "$@"
