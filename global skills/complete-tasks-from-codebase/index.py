@@ -10,7 +10,8 @@ from pathlib import Path
 def main():
     """Main entry point for the OpenCode skill"""
     skill_dir = Path(__file__).parent
-    executor = skill_dir / "complete-tasks.py"
+    # Use v2 (LLM-prompting version) instead of old version
+    executor = skill_dir / "complete-tasks-v2.py"
     
     # Get arguments
     args = sys.argv[1:]
