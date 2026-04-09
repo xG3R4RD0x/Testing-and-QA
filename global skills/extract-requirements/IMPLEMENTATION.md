@@ -1,21 +1,25 @@
-# Extract Requirements Skill - Agent Implementation Guide
+# Extract Requirements - Agent Implementation Guide
 
 ## Overview
 
-This skill enables agents to extract requirements from PDF files and structure them into a JSON format.
+Agents use this skill to extract requirements from PDF documents and generate a structured `requirements.json` file. This guide provides step-by-step instructions for implementation.
 
-## How the Agent Should Use This Skill
+## Execution Steps
 
-### Step 1: Get the PDF Path
-The user provides the path to the PDF file containing requirements.
+### Step 1: Get Repository Name
 
-### Step 2: Use the pdf-reader Tool
-Call the `pdf-reader_read_pdf` tool with:
-- `sources`: Array with the PDF path
-- `include_full_text`: true (to get complete content)
-- `include_tables`: true (if tables contain requirements)
+Extract the repository name from the current git repository:
 
-Example:
+```bash
+git rev-parse --show-toplevel
+# Extract the basename (last path component)
+# Example: /Users/admin/dev/hamm-therapy → hamm-therapy
+```
+
+### Step 2: Extract PDF Content
+
+Use the `pdf-reader_read_pdf` tool to extract the PDF:
+
 ```
 pdf-reader_read_pdf({
   sources: [{ path: "/path/to/requirements.pdf" }],
@@ -25,15 +29,46 @@ pdf-reader_read_pdf({
 ```
 
 ### Step 3: Semantic Analysis
-Once the PDF content is extracted:
-1. Read through all the text carefully
-2. Identify main requirements (top-level features, goals, or requirements)
-3. For each requirement, identify associated sub-tasks
-4. Create meaningful descriptions for each item
-5. Assign sequential IDs (REQ-001, REQ-002, etc.)
 
-### Step 4: Structure the JSON
-Create a JSON object following this structure:
+Analyze the extracted PDF content:
+
+1. **Identify main requirements** - Look for top-level features, goals, or requirements sections
+2. **Find sub-tasks** - For each requirement, identify associated tasks or components
+3. **Create descriptions** - Write clear, concrete descriptions that explain purpose and scope
+4. **Assign IDs** - Use format REQ-001, REQ-002, etc. (zero-padded to 3 digits)
+5. **Note dependencies** - Track any relationships between requirements
+
+### Step 4: Handle Non-English Content
+
+**Critical:** If the PDF is NOT in English, you MUST translate all titles and descriptions to English:
+
+1. Identify the source language
+2. Translate each requirement title to concise English
+3. Translate descriptions to technical English using standard software development terminology
+4. Use consistent terminology throughout (e.g., "feature", "module", "component", "integration", "authentication")
+5. Preserve technical meaning - ensure translation accurately represents original intent
+
+**Example:**
+```
+German → English Translation
+- Title: "Formulare von Konfiguration in DB verlagern"
+  → "Migrate Forms from Configuration to Database"
+- Description: "Migrieren Sie Formulare von Konfigurationsdateien..."
+  → "Migrate forms from configuration files to database with appropriate data structure..."
+```
+
+### Step 5: Create Reports Directory
+
+Ensure the Reports directory exists:
+
+```bash
+mkdir -p /Users/admin/dev/Reports/{repository_name}/
+```
+
+### Step 6: Structure JSON
+
+Create the JSON object with this exact structure:
+
 ```json
 {
   "repository_name": "extracted-from-git",
@@ -42,13 +77,13 @@ Create a JSON object following this structure:
   "main_requirements": [
     {
       "id": "REQ-001",
-      "title": "Requirement name",
-      "description": "Detailed description",
+      "title": "Requirement name (English)",
+      "description": "Detailed description of what this requirement covers",
       "sub_tasks": [
         {
           "id": "TASK-001",
-          "title": "Sub-task name",
-          "description": "Sub-task description"
+          "title": "Sub-task name (English)",
+          "description": "Description of what needs to be done"
         }
       ]
     }
@@ -56,112 +91,151 @@ Create a JSON object following this structure:
 }
 ```
 
-### Step 5: Extract Repository Name
-Run a git command to get the repository name:
-```bash
-git rev-parse --show-toplevel
+### Step 7: Save JSON File
+
+Write the structured JSON to the Reports directory:
+
 ```
-Then extract just the directory name (the last part of the path).
+/Users/admin/dev/Reports/{repository_name}/requirements.json
+```
 
-### Step 6: Create Reports Directory
-Ensure the directory exists: `/Users/admin/dev/Reports/{repository_name}/`
+### Step 8: Report Results
 
-### Step 7: Save the JSON File
-Write the structured JSON to: `/Users/admin/dev/Reports/{repository_name}/requirements.json`
-
-### Step 8: Provide Feedback
-Report to the user:
-- The PDF file analyzed
+Inform the user of:
+- PDF file analyzed
 - Number of requirements extracted
-- Number of sub-tasks
-- The path where the JSON file was saved
-- The repository name
+- Number of sub-tasks identified
+- Exact file path where JSON was saved
+- Repository name
 
-## Example Workflow
+## Validation Checklist
 
-A user might ask:
+Before saving, verify:
+
+- [ ] PDF file exists and is readable
+- [ ] Repository name extracted correctly
+- [ ] Reports directory created successfully
+- [ ] JSON is valid (no syntax errors)
+- [ ] All requirement IDs are unique (REQ-001, REQ-002, etc.)
+- [ ] All sub-task IDs are unique within their requirement
+- [ ] No empty descriptions
+- [ ] All titles and descriptions are in English
+- [ ] File saved successfully to correct path
+- [ ] User informed of save location
+
+## Common Issues & Solutions
+
+### Issue: "PDF extraction gives garbled text"
+**Solution:** 
+- Verify PDF is not corrupted: `file /path/to/pdf`
+- Try extracting specific pages with pdf-reader
+- Some PDFs may have special encoding that needs manual handling
+
+### Issue: "Requirements too deeply nested"
+**Solution:**
+- Keep 2 levels maximum (requirement → sub-tasks)
+- Don't nest sub-tasks within sub-tasks
+- If you have 3+ levels, flatten to 2 levels using composite titles
+
+### Issue: "Sub-task IDs not sequential"
+**Solution:**
+- Use format: TASK-001, TASK-002, etc.
+- Zero-pad to 3 digits
+- **Continue numbering across all requirements** (don't reset per requirement)
+- Example: REQ-001 has TASK-001,002; REQ-002 has TASK-003,004 (not 001,002)
+
+### Issue: "Can't determine repository name"
+**Solution:**
+- Verify working directory is inside a git repository
+- Run `git rev-parse --show-toplevel` to test
+- If not a git repo, specify repository name manually
+
+### Issue: "Not sure if content is truly a requirement"
+**Solution:**
+- Separate main requirements from implementation details
+- Requirements should describe WHAT needs to be done
+- Subtasks can contain HOW details
+- When in doubt, prefer fewer larger requirements over many small ones
+
+## JSON Schema Details
+
+### Main Requirement Fields
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `id` | string | Yes | Format: REQ-001, REQ-002, etc. |
+| `title` | string | Yes | Concise, English, action-oriented (e.g., "Implement User Authentication") |
+| `description` | string | Yes | Technical, English, explains purpose and scope |
+| `sub_tasks` | array | Yes | Minimum 1 sub-task per requirement (can be empty `[]` for simple requirements) |
+
+### Sub-Task Fields
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `id` | string | Yes | Format: TASK-001, TASK-002, etc. **Continue numbering across all requirements** (TASK-001, TASK-002, TASK-003, etc.) |
+| `title` | string | Yes | Concise, English |
+| `description` | string | Yes | Technical, explains what needs to be done |
+
+**Important:** Sub-task IDs should continue sequentially across all requirements in the same JSON file. Example:
 ```
-Extract requirements from /Users/admin/dev/goetz-kundenportal-phoenix/requirements.pdf
+REQ-001
+  TASK-001
+  TASK-002
+REQ-002
+  TASK-003  ← Continues from TASK-002
+  TASK-004
 ```
 
-The agent would:
-1. Use pdf-reader to extract the PDF content
-2. Analyze it semantically to identify 6 main requirements
-3. Within those, find 46 sub-tasks
-4. Create the JSON structure with proper IDs and descriptions
-5. Determine the repository name is `goetz-kundenportal-phoenix`
-6. Save to `/Users/admin/dev/Reports/goetz-kundenportal-phoenix/requirements.json`
-7. Report back to the user with the count and location
+## Tips for Quality Extraction
 
-## JSON Structure Details
+1. **Be specific** - Avoid vague requirements like "improve system"
+2. **Use action verbs** - Titles should start with verbs (Implement, Create, Add, Migrate, etc.)
+3. **Include context** - Descriptions should explain the "why" and "what", not just "what"
+4. **Keep requirements independent** - Each requirement should be independently valuable
+5. **Group related tasks** - Sub-tasks should be directly related to their parent requirement
+6. **Consistent naming** - Use consistent terminology across all requirements
 
-### Main Requirements
-Each requirement should have:
-- `id`: Unique identifier (REQ-001, REQ-002, etc.)
-- `title`: Clear, concise title of the requirement
-- `description`: Detailed explanation of what this requirement covers
-- `sub_tasks`: Array of related tasks/components
+## Example: Complete Extraction
 
-### Sub-Tasks
-Each sub-task should have:
-- `id`: Unique identifier within the requirement (TASK-001, TASK-002, etc.)
-- `title`: Clear, concise title of the task
-- `description`: Detailed explanation of what needs to be done
+**Input PDF:** project-specs.pdf (contains requirements in mixed English/German)
 
-### Optional Fields
-You may also include:
-- `estimated_effort`: Story points or time estimate (e.g., "2 PT", "1 day")
-- `estimated_cost`: Budget or cost estimate
-- `priority`: Priority level (high, medium, low)
-- `status`: Current status (planned, in-progress, completed)
+**Extraction Process:**
+1. Extract PDF text using pdf-reader → 5,000 words
+2. Identify main requirements → Find 3 main sections
+3. Identify sub-tasks → Each requirement has 2-3 associated tasks
+4. Translate German content → Convert to English technical terminology
+5. Create JSON structure → Organize hierarchically
+6. Save to `/Users/admin/dev/Reports/project-name/requirements.json`
 
-## Tips for Better Requirements
-
-1. **Be Specific**: Use concrete, measurable descriptions
-2. **Keep it Hierarchical**: Main requirements should contain related sub-tasks
-3. **Use Clear Titles**: Titles should be self-explanatory without reading description
-4. **Include Context**: Descriptions should explain the "why" not just the "what"
-5. **Consistent IDs**: Always use the format REQ-### and TASK-### with zero-padding
-
-## Example JSON Output
-
+**Result JSON:**
 ```json
 {
-  "repository_name": "goetz-kundenportal-phoenix",
-  "extraction_date": "2026-03-18",
-  "total_requirements": 2,
+  "repository_name": "project-name",
+  "extraction_date": "2026-04-01",
+  "total_requirements": 3,
   "main_requirements": [
     {
       "id": "REQ-001",
-      "title": "Formulare von Konfiguration in DB verlagern",
-      "description": "Migrate forms from configuration files to database with proper data structure, UUID references, and admin management interface",
-      "estimated_effort": "1.0 PT",
+      "title": "Implement User Authentication System",
+      "description": "Build secure login and session management with OAuth 2.0 support",
       "sub_tasks": [
         {
           "id": "TASK-001",
-          "title": "Erstellen einer passenden Datenstruktur",
-          "description": "Create appropriate database schema for forms storage"
+          "title": "Design database schema for users",
+          "description": "Create tables for user accounts, sessions, and credentials"
         },
         {
           "id": "TASK-002",
-          "title": "Seeding der bestehenden Formulare",
-          "description": "Migrate and seed existing forms into new database structure"
-        }
-      ]
-    },
-    {
-      "id": "REQ-002",
-      "title": "Versionierung von Formularen",
-      "description": "Implement form versioning system with draft management and backwards compatibility",
-      "estimated_effort": "0.5 PT",
-      "sub_tasks": [
-        {
-          "id": "TASK-003",
-          "title": "FormuarVersionID + Version UUID+Int-Version",
-          "description": "Implement versioning with FormuarVersionID (UUID) and numeric version numbers"
+          "title": "Implement login endpoint",
+          "description": "Create POST /auth/login with validation and error handling"
         }
       ]
     }
   ]
 }
 ```
+
+## See Also
+
+- **SKILL.md** - User-facing documentation
+- **PROMPTS-REFERENCE.md** - Token-optimized prompts for implementation

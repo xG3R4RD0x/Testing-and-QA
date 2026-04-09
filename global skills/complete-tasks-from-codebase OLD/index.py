@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenCode Skill Entrypoint: Complete Tasks from Codebase v2.0.0
-Main entry point for the refactored skill with modular components
+OpenCode Skill Entrypoint: Complete Tasks from Codebase
 """
 
 import sys
@@ -11,8 +10,8 @@ from pathlib import Path
 def main():
     """Main entry point for the OpenCode skill"""
     skill_dir = Path(__file__).parent
-    # Use refactored v2 version
-    executor = skill_dir / "complete-tasks-from-codebase-v2.py"
+    # Use v2 (LLM-prompting version) instead of old version
+    executor = skill_dir / "complete-tasks-v2.py"
     
     # Get arguments
     args = sys.argv[1:]

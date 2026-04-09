@@ -1,8 +1,9 @@
 ---
 name: complete-tasks-from-codebase
-description: Analyze your codebase and automatically enrich requirements.json with Gherkin test scenarios and step-by-step implementation guidance
+description: Analyze your codebase and automatically enrich requirements.json with implementation steps and test scenarios using intelligent agent dispatch
 license: MIT
 compatibility: opencode
+version: 2.0.0
 metadata:
   audience: developers
   workflow: requirements-management
@@ -14,22 +15,28 @@ tags:
   - implementation
   - code-analysis
   - automation
+  - agent-agnostic
 ---
 
-# Complete Tasks from Codebase
+# Complete Tasks from Codebase v2.0.0
 
-This skill analyzes your project repository and automatically enriches `requirements.json` files by generating:
-- **Gherkin BDD test scenarios** for each requirement and subtask
-- **Implementation guidance** with step-by-step instructions for each subtask
+Refactored skill for automatic requirement enrichment with:
+- **Non-interactive automatic dispatch** - Zero user interaction after invocation
+- **Agent-agnostic** - Works with OpenCode, Claude Code, Codex, and other LLM agents
+- **Smart codebase analysis** - Retrieves only relevant code patterns per task
+- **Knowledge base first** - Uses existing docs before dynamic analysis
+- **Parallel execution** - One subagent per requirement for speed
+- **Temporary caching** - KB cache auto-deleted after completion
 
 ## When to Use This Skill
 
 Use this skill when you:
 - Have a `requirements.json` file that needs enrichment
-- Want to automatically generate test scenarios
-- Need step-by-step implementation guidance for your subtasks
-- Want your codebase analyzed to provide framework-aware guidance
-- Need to create BDD test specs for your requirements
+- Want automatically generated implementation steps for each subtask
+- Need tailored Gherkin BDD test scenarios
+- Want analysis based on your actual codebase patterns
+- Need non-interactive, fully-automatic processing
+- Want it to work across any agent system
 
 ## How to Use This Skill
 
@@ -42,55 +49,90 @@ Use this skill when you:
 ### Example
 
 ```
-/complete-tasks /Users/admin/dev/Reports/hamm-therapy/requirements.json
+/complete-tasks /Users/admin/dev/Reports/goetz-kundenportal-phoenix/requirements.json
 ```
 
-## What This Skill Does
+## Refactored Architecture (v2.0.0)
 
-### Stage 1: Codebase Analysis
-The skill analyzes your repository and automatically detects:
-- Programming language (Elixir, Python, JavaScript, TypeScript, Java, Go, Ruby)
-- Frameworks (Phoenix, Django, Express, React, Rails, Spring, etc.)
-- Key modules and architecture patterns
-- Dependencies and versions
-- Test frameworks used
+### 5-Stage Workflow
 
-### Stage 2: Requirements Enrichment
+**Stage 1: Initialization**
+- Load requirements.json
+- Detect project name and root directory
+- Validate structure
 
-**For each requirement:**
-- Generates 3 Gherkin test scenarios
-  - Happy path (success case)
-  - Error handling (validation failures)
-  - Edge cases (boundary conditions)
+**Stage 2: Knowledge Base Detection**
+- Scans project for existing documentation:
+  - ARCHITECTURE.md, PATTERNS.md, TECH-STACK.md
+  - GUIDELINES.md, API-SPEC.md, DATABASE-SCHEMA.md
+  - Any .md files in docs/ directories
+- Creates temporary cache (auto-deleted after)
+- Summarizes KB for payload
 
-**For each subtask:**
-- Generates detailed implementation guidance including:
-  - Overview (what needs to be built)
-  - Key files (relative paths to modify/create)
-  - Implementation steps (5-8 numbered actions)
-  - Key considerations (patterns, dependencies, gotchas)
-  - Cross-references to related subtasks
+**Stage 3: Codebase Analysis**
+- Detects programming language and framework
+- Identifies ORM, test framework, patterns
+- Extracts key file structures
+- Compiles tech stack info
 
-### Stage 3: Safe File Update
-- Creates timestamped backup of original file
-- Updates the requirements.json with enriched content
-- Preserves original structure and existing data
+**Stage 4: Subagent Dispatch (Automatic)**
+- For each requirement:
+  - Collects all subtasks
+  - Builds universal JSON payload with all context
+  - Automatically dispatches to subagent
+  - Retries once on failure, then skips
+  - Collects response
 
-## Output Format
+**Stage 5: JSON Enrichment**
+- Updates each subtask with:
+  - `implementation`: Step-by-step implementation guide
+  - `test`: Gherkin BDD test scenarios
+- Minimal validation (non-empty check)
+- Saves with timestamped backup
 
-Your `requirements.json` gets enriched with:
+**Stage 6: Cleanup**
+- Deletes temporary KB cache
+- Reports completion stats
+
+## Universal Payload Format
+
+Each subagent receives a single JSON payload containing everything needed:
 
 ```json
 {
-  "id": "REQ-001",
-  "title": "User Authentication",
-  "test": "Feature: User Authentication\n  Scenario: ...",
+  "skill_version": "2.0.0",
+  "operation": "enrich_requirement",
+  "project": {
+    "name": "goetz-kundenportal-phoenix",
+    "root_path": "/path/to/project",
+    "reports_path": "/path/to/Reports/project"
+  },
+  "knowledge_base": {
+    "available": true,
+    "summary": "# ARCHITECTURE.md...",
+    "file_count": 5
+  },
+  "codebase_analysis": {
+    "detected_stack": {
+      "framework": "Phoenix",
+      "language": "Elixir",
+      "orm": "Ecto"
+    },
+    "key_patterns": {
+      "migration_structure": "lib/*/migrations/",
+      "liveview_structure": "lib/*_web/live/"
+    }
+  },
+  "requirement": {
+    "id": "REQ-001",
+    "title": "Requirement Title",
+    "description": "..."
+  },
   "subtasks": [
     {
-      "id": "TASK-001-001",
-      "title": "Create user model",
-      "implementation": "## Overview\n...",
-      "test": "Feature: Create user model\n  Scenario: ..."
+      "id": "TASK-001-01",
+      "title": "Subtask title",
+      "description": "..."
     }
   ]
 }
@@ -98,47 +140,40 @@ Your `requirements.json` gets enriched with:
 
 ## Supported Technologies
 
-### Languages
-- Elixir
-- Python
-- JavaScript
-- TypeScript
-- Java
-- Go
-- Ruby
-
-### Frameworks
-- Phoenix (Elixir)
-- Django, Flask (Python)
-- Express, Fastify (Node.js)
-- React, Next.js (JavaScript/TypeScript)
-- Rails (Ruby)
-- Spring, Quarkus (Java)
-- Gin, Echo (Go)
+### Languages & Frameworks
+- **Elixir**: Phoenix v1.8, Ecto
+- **Python**: Django, Flask, FastAPI, SQLAlchemy
+- **JavaScript/TypeScript**: Express, Fastify, TypeORM
+- **Ruby**: Rails, ActiveRecord
+- **Java**: Spring, Hibernate
+- **Go**: Gin, Echo
 
 ### Test Frameworks
 - ExUnit (Elixir)
 - pytest (Python)
-- Jest (JavaScript/TypeScript)
+- Jest (JavaScript)
 - RSpec (Ruby)
 - JUnit (Java)
-- testing (Go)
 
-## Features
+## Key Features
 
-✨ **Fully Automated** - No configuration needed, just point to your requirements.json
+✅ **Fully Automatic** - No user prompts or interaction required
 
-✨ **Smart Codebase Analysis** - Automatically detects your tech stack
+✅ **Non-Interactive** - Dispatch happens automatically with retry logic
 
-✨ **Production-Quality Tests** - Generates realistic, complete Gherkin scenarios
+✅ **Agent-Agnostic** - Universal payload works with any LLM agent system
 
-✨ **Framework-Aware Guidance** - Implementation hints tailored to your framework
+✅ **Smart Analysis** - Detects tech stack and extracts relevant patterns only
 
-✨ **Safe Operations** - Creates timestamped backups before modifying files
+✅ **KB-First** - Uses existing docs before analyzing code
 
-✨ **Flexible Input** - Supports different JSON key naming conventions
+✅ **Parallel Processing** - One subagent per requirement (not per subtask)
 
-✨ **Token Efficient** - Designed for LLM integration with minimal token usage
+✅ **Automatic Retry** - 1x retry on failure, then gracefully skip
+
+✅ **Temporary Cache** - Knowledge base cache auto-deleted after completion
+
+✅ **Safe Operations** - Timestamped backups of original requirements.json
 
 ## Requirements
 
@@ -147,14 +182,15 @@ Your `requirements.json` file should have this structure:
 ```json
 {
   "repository_name": "my-project",
-  "requirements": [
+  "main_requirements": [
     {
       "id": "REQ-001",
       "title": "Feature Title",
       "description": "Feature description",
-      "subtasks": [
+      "effort_hours": 1.0,
+      "sub_tasks": [
         {
-          "id": "TASK-001-001",
+          "id": "TASK-001-01",
           "title": "Subtask Title",
           "description": "Subtask description"
         }
@@ -164,148 +200,108 @@ Your `requirements.json` file should have this structure:
 }
 ```
 
-Alternative key names are also supported:
-- `main_requirements` instead of `requirements`
-- `sub_tasks` instead of `subtasks`
+Alternative key names supported:
+- `requirements` instead of `main_requirements`
+- `subtasks` instead of `sub_tasks`
 
-## Examples
+## Output Format
 
-### Elixir/Phoenix Project
+After running the skill, each subtask gets two new fields:
 
-Input:
 ```json
 {
-  "id": "REQ-003",
-  "title": "Patient Overview",
-  "subtasks": [
-    {
-      "id": "TASK-003-001",
-      "title": "Filter patients without therapy plan",
-      "description": "Implement a filter..."
-    }
-  ]
+  "id": "TASK-001-01",
+  "title": "Create database schema",
+  "description": "...",
+  "implementation": "## Overview\nCreate database schema for forms...\n\n## Implementation Steps\n1. ...",
+  "test": "Feature: Create database schema\n  Scenario: ..."
 }
 ```
 
-Output (Gherkin test):
-```gherkin
-Feature: Filter patients without therapy plan
-  
-  Scenario: Successfully filter patients without therapy plan
-    Given a database with patients
-    When the user applies the "no therapy plan" filter
-    Then only patients without therapy plans are displayed
-    And the count is accurate
+## Retry Logic
+
+The skill implements intelligent retry handling:
+
+```
+Attempt 1: Dispatch subagent
+  ✅ Success → Use response
+  ❌ Fails → Go to Attempt 2
+
+Attempt 2: Retry same dispatch
+  ✅ Success → Use response
+  ❌ Fails → Skip requirement (marked as processed)
 ```
 
-Output (Implementation):
-```markdown
-## Overview
-Filter patients without therapy plan implementation...
-
-## Key Files
-- lib/hamm_therapy_web/live/patient_overview_live.ex
-- lib/hamm_therapy/accounts/patient_queries.ex
-
-## Implementation Steps
-1. Create database query function...
-2. Add filter parameter to LiveView...
-3. Implement filter toggle in UI...
-[... more steps ...]
-```
-
-## Performance
-
-- **Speed**: 3-5 seconds for typical project (14+ requirements)
-- **Token Usage**: ~18,350 tokens for 14 requirements + 44 subtasks
-- **Backup**: Automatic timestamped backup before modifications
+Result: Maximum 2 attempts, graceful failure
 
 ## Troubleshooting
 
-### Skill not recognized in autocomplete
+### Skill not recognized
 
-1. Verify this directory exists:
+1. Verify skill directory exists:
    ```
    /Users/admin/.agents/skills/complete-tasks-from-codebase/
    ```
 
-2. Check that SKILL.md has the correct frontmatter:
-   ```yaml
-   ---
-   name: complete-tasks-from-codebase
-   description: ...
-   ---
-   ```
+2. Check SKILL.md frontmatter has correct name
 
-3. Reload OpenCode or restart your session
+3. Restart your agent environment
 
-### File not found error
+### Requirements file not found
 
-Ensure you provide the **absolute path** to your requirements.json:
+Ensure you provide **absolute path**:
 ```
 /complete-tasks /Users/admin/dev/Reports/my-project/requirements.json
 ```
 
 ### Invalid JSON error
 
-Verify your requirements.json has:
+Verify requirements.json has:
 - Valid JSON syntax
 - Either `main_requirements` or `requirements` key
-- List of requirement objects with id, title, description
+- List of requirement objects with `id`, `title`, `description`
 
-### Tests/Implementation not generated
+### No KB detected
 
-The skill will skip generation if:
-- Fields already contain valid Gherkin/Markdown
-- Fields are not empty
+This is normal! The skill falls back to dynamic codebase analysis if no KB found
 
-Delete the field content to regenerate.
+## Project Structure
 
-## Advanced Features
-
-### Cross-References
-
-The skill automatically adds references between related subtasks:
-
-```markdown
-## Key Considerations
-- Dependencies: Coordinate with TASK-003-002
-- See TASK-003-003 for similar patterns
+```
+/Users/admin/.agents/skills/complete-tasks-from-codebase/
+├─ lib/
+│  ├─ __init__.py
+│  ├─ complete_tasks_orchestrator.py    (Main orchestration)
+│  ├─ knowledge_base_manager.py         (KB detection & caching)
+│  ├─ codebase_analyzer.py              (Tech stack detection)
+│  ├─ payload_builder.py                (Universal payload creation)
+│  ├─ agent_dispatcher.py               (Agent-agnostic dispatch)
+│  ├─ json_enricher.py                  (Updates requirements.json)
+│  └─ retry_handler.py                  (Retry logic)
+├─ complete-tasks-from-codebase-v2.py   (Main entry point)
+├─ index.py                             (OpenCode entry point)
+├─ SKILL.md                             (This file)
+├─ README.md                            (Architecture guide)
+├─ PROMPTS-REFERENCE.md                 (Subagent prompt templates)
+└─ OPENCODE-INTEGRATION.md              (Agent adaptation)
 ```
 
-### Existing Content Preservation
+## Performance
 
-If some tests or implementations are already present (and valid), the skill will:
-- Skip generating new ones for those fields
-- Fill in only missing fields
-- Preserve your manual edits
-
-### Flexible Input/Output
-
-The skill supports multiple JSON structures:
-- Both `main_requirements` and `requirements` keys
-- Both `sub_tasks` and `subtasks` naming
-- Preserves all other fields and metadata
-
-## Next Steps
-
-After running the skill:
-
-1. **Review Generated Content** - Check the test scenarios and implementation guidance
-2. **Customize If Needed** - Adjust wording or add specific details
-3. **Share with Team** - Use enriched requirements for planning and development
-4. **Generate Code** - Use implementation guidance to start coding
-5. **Write Tests** - Use Gherkin scenarios as test specifications
+- **Speed**: ~5-10 seconds for typical project (14+ requirements)
+- **Token Usage**: ~20,000-25,000 tokens for 14 requirements + 44 subtasks
+- **Cache**: Temporary (deleted after)
+- **Backup**: Automatic timestamped backup
 
 ## Support
 
 For issues or questions:
-- Check the README.md for detailed documentation
-- Review PROMPTS-REFERENCE.md for technical details
-- See OPENCODE-INTEGRATION.md for integration specifics
+- Check README.md for architecture details
+- Review PROMPTS-REFERENCE.md for payload examples
+- See OPENCODE-INTEGRATION.md for agent integration details
 
 ---
 
-**Version:** 1.0.0  
+**Version:** 2.0.0  
 **Status:** Production Ready ✅  
-**Last Updated:** 2026-03-24
+**Released:** 2026-04-09
