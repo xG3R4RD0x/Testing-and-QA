@@ -1,0 +1,144 @@
+{
+  "sample_boards_response": {
+    "data": {
+      "organization": {
+        "projectsV2": {
+          "nodes": [
+            {
+              "id": "PVT_kwDOABCDEF",
+              "title": "goetz-kundenportal-phoenix: Sprint 1"
+            },
+            {
+              "id": "PVT_kwDOABCDEG",
+              "title": "goetz-kundenportal-phoenix: Backlog"
+            },
+            {
+              "id": "PVT_kwDOABCDEH",
+              "title": "Marketing Campaign Q1"
+            },
+            {
+              "id": "PVT_kwDOABCDEI",
+              "title": "DevOps Infrastructure"
+            },
+            {
+              "id": "PVT_kwDOABCDEJ",
+              "title": "goetz-kundenportal-phoenix: Done"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "sample_issues_response": {
+    "data": {
+      "node": {
+        "items": {
+          "nodes": [
+            {
+              "content": {
+                "__typename": "Issue",
+                "number": 123,
+                "title": "Implement user authentication",
+                "body": "Add login functionality with JWT tokens",
+                "state": "OPEN",
+                "createdAt": "2024-01-15T10:00:00Z",
+                "updatedAt": "2024-01-20T15:30:00Z",
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "alice-dev"
+                      },
+                      "body": "I'll start on the JWT implementation",
+                      "createdAt": "2024-01-15T11:00:00Z"
+                    },
+                    {
+                      "author": {
+                        "login": "bob-pm"
+                      },
+                      "body": "Deadline is EOW, please prioritize",
+                      "createdAt": "2024-01-18T09:00:00Z"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "content": {
+                "__typename": "Issue",
+                "number": 124,
+                "title": "Fix login form validation",
+                "body": "Email field should validate format before submission",
+                "state": "CLOSED",
+                "createdAt": "2024-01-10T08:00:00Z",
+                "updatedAt": "2024-01-18T16:45:00Z",
+                "comments": {
+                  "nodes": [
+                    {
+                      "author": {
+                        "login": "charlie-qa"
+                      },
+                      "body": "Verified fix, tests passing",
+                      "createdAt": "2024-01-18T17:00:00Z"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "content": {
+                "__typename": "Issue",
+                "number": 125,
+                "title": "Create API endpoint for products",
+                "body": "Build REST endpoint at GET /api/products with pagination",
+                "state": "OPEN",
+                "createdAt": "2024-01-12T14:30:00Z",
+                "updatedAt": "2024-01-19T10:15:00Z",
+                "comments": {
+                  "nodes": []
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "sample_filtered_boards": [
+    {
+      "id": "PVT_kwDOABCDEF",
+      "title": "goetz-kundenportal-phoenix: Sprint 1"
+    },
+    {
+      "id": "PVT_kwDOABCDEG",
+      "title": "goetz-kundenportal-phoenix: Backlog"
+    },
+    {
+      "id": "PVT_kwDOABCDEJ",
+      "title": "goetz-kundenportal-phoenix: Done"
+    }
+  ],
+  "expected_output_schema": {
+    "repository": "goetz-kundenportal/goetz-kundenportal-phoenix",
+    "board_name": "goetz-kundenportal-phoenix: Sprint 1",
+    "extracted_at": "2024-01-20T15:30:00Z",
+    "total_issues": 3,
+    "issues": [
+      {
+        "number": 123,
+        "title": "Implement user authentication",
+        "body": "Add login functionality with JWT tokens",
+        "state": "OPEN",
+        "created_at": "2024-01-15T10:00:00Z",
+        "updated_at": "2024-01-20T15:30:00Z",
+        "comments": [
+          {
+            "author": "alice-dev",
+            "body": "I'll start on the JWT implementation",
+            "created_at": "2024-01-15T11:00:00Z"
+          }
+        ]
+      }
+    ]
+  }
+}

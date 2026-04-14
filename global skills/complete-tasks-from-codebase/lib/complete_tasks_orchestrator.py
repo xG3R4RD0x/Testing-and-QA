@@ -10,12 +10,12 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 # Import modular components
-from retry_handler import RetryHandler
-from knowledge_base_manager import KnowledgeBaseManager
-from codebase_analyzer import CodebaseAnalyzer
-from payload_builder import PayloadBuilder
-from agent_dispatcher import AgentDispatcher
-from json_enricher import JsonEnricher
+from .retry_handler import RetryHandler
+from .knowledge_base_manager import KnowledgeBaseManager
+from .codebase_analyzer import CodebaseAnalyzer
+from .payload_builder import PayloadBuilder
+from .agent_dispatcher import AgentDispatcher
+from .json_enricher import JsonEnricher
 
 
 # Configure logging
@@ -152,10 +152,10 @@ class CompleteTasksOrchestrator:
                 parts = str(req_path).split("/Reports/")
                 if len(parts) == 2:
                     project_name = parts[1].split("/")[0]
-                    # Project root is likely one level up from Reports
-                    reports_parent = req_path.parent.parent
-                    if (reports_parent / project_name).exists():
-                        project_root = reports_parent / project_name
+                    # Project root is at /dev/{project-name}, not /dev/Reports/{project-name}
+                    dev_parent = req_path.parent.parent.parent  # Go up from /Reports/{project}
+                    if (dev_parent / project_name).exists():
+                        project_root = dev_parent / project_name
             
             # Fallback: use name from requirements or parent
             if not project_name:

@@ -64,12 +64,22 @@ class JsonEnricher:
             stats["error"] = "No requirements found"
             return stats
         
+        # Normalize subagent_responses to extract result field if present
+        normalized_responses = []
+        for resp in subagent_responses:
+            if resp.get("result"):
+                # Response is wrapped in retry handler format
+                normalized_responses.append(resp.get("result"))
+            else:
+                # Response is already the actual response
+                normalized_responses.append(resp)
+        
         # Process each requirement
         for req_idx, requirement in enumerate(requirements_list):
             req_id = requirement.get("id", f"REQ-{req_idx}")
             
             # Find response for this requirement
-            response = self._find_response(subagent_responses, req_id)
+            response = self._find_response(normalized_responses, req_id)
             
             if not response:
                 self.logger.warning(f"No response for requirement {req_id}")
